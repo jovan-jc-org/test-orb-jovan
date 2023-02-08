@@ -20,6 +20,7 @@ workflows:
             - orb-tools/lint
             - orb-tools/pack
       - orb-tools/publish:
+          type: approval
           vcs-type: github
           pub-type: production
           orb-name: jovan-jc-org/test-orb-jovan
