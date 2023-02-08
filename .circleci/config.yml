@@ -1,32 +1,35 @@
 version: 2.1
-
+setup: true
 orbs:
-  orb-tools: circleci/orb-tools@10.1
+  orb-tools: circleci/orb-tools@11.5
+  shellcheck: circleci/shellcheck@3.1
+
+filters: &filters
+  tags:
+    only: /.*/
 
 workflows:
-  # Prior to producing a development orb (which requires credentials) basic validation, linting, and even unit testing can be performed.
-  # This workflow will run on every commit
-  test-pack-and-publish-orb:
+  lint-pack:
     jobs:
-      - orb-tools/lint # Lint Yaml files
-      - orb-tools/pack # Pack orb source
-      # Publish development version(s) of the orb.
-      - orb-tools/publish-dev:
-          orb-name: jovan-jc-org/test-orb-jovan
-          context: circleci_orb_publish
+      - orb-tools/lint:
+          filters: *filters
+      - orb-tools/pack:
+          filters: *filters
+      - orb-tools/review:
+          filters: *filters
+      - shellcheck/check:
+          filters: *filters
+      - orb-tools/publish:
+          orb-name: <namespace>/<orb-name>
+          vcs-type: << pipeline.project.type >>
           requires:
-            - orb-tools/lint
-            - orb-tools/pack
-      - orb-tools/dev-promote-prod-from-commit-subject:
-          orb-name: jovan-jc-org/test-orb-jovan
-          context: circleci_orb_publish
-          add-pr-comment: false
-          fail-if-semver-not-indicated: true
-          ssh-fingerprints: "72:56:45:09:5c:3b:f7:16:c4:34:c2:f3:e9:18:c6:f9"
-          publish-version-tag: true
-          requires:
-            - orb-tools/publish-dev
-          filters:
-            branches:
-              only:
-                - main
+            [orb-tools/lint, orb-tools/review, orb-tools/pack, shellcheck/check]
+          # Use a context to hold your publishing token.
+          context: <publishing-context>
+          filters: *filters
+      # Triggers the next workflow in the Orb Development Kit.
+      - orb-tools/continue:
+          pipeline-number: << pipeline.number >>
+          vcs-type: << pipeline.project.type >>
+          requires: [orb-tools/publish]
+          filters: *filters
