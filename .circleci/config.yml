@@ -23,7 +23,6 @@ workflows:
           vcs-type: github
           pub-type: production
           orb-name: jovan-jc-org/test-orb-jovan
-          ssh-fingerprints: "05:2a:a2:6f:bf:2e:73:c5:4e:2f:4d:36:69:c1:32:c5"
           context: circleci_orb_publish
           requires:
             - publish-dev
