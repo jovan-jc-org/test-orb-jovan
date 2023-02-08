@@ -5,52 +5,32 @@ usage:
   version: 2.1
   orbs:
     ci-php: jovan-jc-org/test-orb-jovan
+  filters: &filters
+    tags:
+      only: /.*/
+
   workflows:
-    my-deploy-workflow:
+    lint-pack:
       jobs:
-        - ci-php/install-dependencies-with-docker:
-            sshFingerprint: "xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx"
+        - orb-tools/lint:
+            filters: *filters
+        - orb-tools/pack:
+            filters: *filters
+        - orb-tools/review:
+            filters: *filters
+        - shellcheck/check:
+            filters: *filters
+        - orb-tools/publish:
+            orb-name: <namespace>/<orb-name>
+            vcs-type: << pipeline.project.type >>
             requires:
-        - build-composer
-        - ci-php/coverage:
-            requires:
-              - ci-php/install-dependencies-with-docker
-              - ci-caching/build-docker-images
-        - ci-php/code-style:
-            requires:
-              - ci-php/install-dependencies-with-docker
-              - ci-caching/build-docker-images
-        - ci-php/static-analysis:
-            requires:
-              - ci-php/install-dependencies-with-docker
-              - ci-caching/build-docker-images
-        - ci-php/infection-testing:
-            requires:
-              - ci-php/install-dependencies-with-docker
-              - ci-caching/build-docker-images
-        - ci-php/php-cs-fixer:
-            sshFingerprint: "xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx"
-            dependencyCheckSumFile: "./composer.json"
-            containerName: "project-php"
-            commitUserEmail: "john.smith@example.com"
-            fixSource: "src tests"
-            requires:
-              - ci-php/install-dependencies
-        - ci-php/php-cs-fixer-risky:
-            sshFingerprint: "xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx"
-            dependencyCheckSumFile: "./composer.json"
-            containerName: "project-php"
-            commitUserEmail: "john.smith@example.com"
-            fixSource: "src tests"
-            requires:
-              - ci-php/install-dependencies
-        - ci-php/todo-checker:
-            context: todochecker
-            pathsToCheck: "./src ./tests"
-        - ci-php/composer-audit:
-            context: dockerhub-credentials
-            sshFingerprint: "xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx"
-            dependencyCheckSumFile: "./composer.json"
-            requires:
-              - ci-caching/build-docker-images
-              - ci-php/install-dependencies
+              [ orb-tools/lint, orb-tools/review, orb-tools/pack, shellcheck/check ]
+            # Use a context to hold your publishing token.
+            context: <publishing-context>
+            filters: *filters
+        # Triggers the next workflow in the Orb Development Kit.
+        - orb-tools/continue:
+            pipeline-number: << pipeline.number >>
+            vcs-type: << pipeline.project.type >>
+            requires: [ orb-tools/publish ]
+            filters: *filters
