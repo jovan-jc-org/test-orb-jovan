@@ -13,6 +13,7 @@ workflows:
       # Publish development version(s) of the orb.
       - orb-tools/publish:
           name: publish-dev
+          github-token: GHI_TOKEN
           vcs-type: github
           orb-name: jovan-jc-org/test-orb-jovan
           context: circleci_orb_publish
