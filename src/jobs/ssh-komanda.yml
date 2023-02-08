@@ -1,0 +1,6 @@
+description: >
+  This job runs 
+
+machine: true
+
+resource_class: << parameters.resourceClass >>
