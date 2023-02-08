@@ -14,7 +14,7 @@ workflows:
       - orb-tools/publish:
           name: publish-dev
           vcs-type: github
-          orb-name: jovan-jc-org/ci-test-orb
+          orb-name: jovan-jc-org/test-orb-jovan
           context: circleci_orb_publish
           requires:
             - orb-tools/lint
@@ -22,7 +22,7 @@ workflows:
       - orb-tools/publish:
           vcs-type: github
           pub-type: production
-          orb-name: jovan-jc-org/ci-test-orb
+          orb-name: jovan-jc-org/test-orb-jovan
           context: circleci_orb_publish
           requires:
             - publish-dev
