@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  orb-tools: circleci/orb-tools@11.6.1
+  orb-tools: circleci/orb-tools@10.1
 
 workflows:
   # Prior to producing a development orb (which requires credentials) basic validation, linting, and even unit testing can be performed.
@@ -11,26 +11,22 @@ workflows:
       - orb-tools/lint # Lint Yaml files
       - orb-tools/pack # Pack orb source
       # Publish development version(s) of the orb.
-      - orb-tools/publish:
-          name: publish-dev
-          github-token: GHI_TOKEN
-          vcs-type: github
+      - orb-tools/publish-dev:
           orb-name: jovan-jc-org/test-orb-jovan
           context: circleci_orb_publish
           requires:
             - orb-tools/lint
             - orb-tools/pack
-      - orb-tools/publish:
-          vcs-type: github
-          pub-type: production
-          github-token: GHI_TOKEN
+      - orb-tools/dev-promote-prod-from-commit-subject:
           orb-name: jovan-jc-org/test-orb-jovan
           context: circleci_orb_publish
+          add-pr-comment: false
+          fail-if-semver-not-indicated: true
+          ssh-fingerprints: "72:56:45:09:5c:3b:f7:16:c4:34:c2:f3:e9:18:c6:f9"
+          publish-version-tag: true
           requires:
-            - publish-dev
+            - orb-tools/publish-dev
           filters:
             branches:
               only:
                 - main
-            tags:
-              only: '^v[0-9]+\.[0-9]+\.[0-9]+$'
