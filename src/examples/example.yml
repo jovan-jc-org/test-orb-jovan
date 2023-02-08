@@ -1,6 +1,6 @@
 description: >
   --- Example php checks workflow for testing purpost but also should be
-  good start point for no experienced developer 
+  good start point for no experienced developer.
 
 usage:
   version: 2.1
@@ -38,5 +38,5 @@ usage:
         - orb-tools/continue:
             pipeline-number: << pipeline.number >>
             vcs-type: << pipeline.project.type >>
-            requires: [ orb-tools/publish ]
+            requires: [orb-tools/publish]
             filters: *filters
