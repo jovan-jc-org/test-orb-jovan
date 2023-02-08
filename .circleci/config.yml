@@ -1,34 +1,35 @@
 version: 2.1
-
+setup: true
 orbs:
-  orb-tools: circleci/orb-tools@11.6.1
+  orb-tools: circleci/orb-tools@11.5
+  shellcheck: circleci/shellcheck@3.1
+
+filters: &filters
+  tags:
+    only: /.*/
 
 workflows:
-  # Prior to producing a development orb (which requires credentials) basic validation, linting, and even unit testing can be performed.
-  # This workflow will run on every commit
-  test-pack-and-publish-orb:
+  lint-pack:
     jobs:
-      - orb-tools/lint # Lint Yaml files
-      - orb-tools/pack # Pack orb source
-      # Publish development version(s) of the orb.
+      - orb-tools/lint:
+          filters: *filters
+      - orb-tools/pack:
+          filters: *filters
+      - orb-tools/review:
+          filters: *filters
+      - shellcheck/check:
+          filters: *filters
       - orb-tools/publish:
-          name: publish-dev
-          vcs-type: github
           orb-name: jovan-jc-org/ci-test-orb
-          context: circleci_orb_publish
+          vcs-type: << pipeline.project.type >>
           requires:
-            - orb-tools/lint
-            - orb-tools/pack
-      - orb-tools/publish:
-          vcs-type: github
-          pub-type: production
-          orb-name: jovan-jc-org/ci-test-orb
-          context: circleci_orb_publish
-          requires:
-            - publish-dev
-          filters:
-            branches:
-              only:
-                - main
-            tags:
-              only: '/^v[0-9]+\.[0-9]+\.[0-9]+$/'
+            [orb-tools/lint, orb-tools/review, orb-tools/pack, shellcheck/check]
+          # Use a context to hold your publishing token.
+          context: orb-publishing
+          filters: *filters
+      # Triggers the next workflow in the Orb Development Kit.
+      - orb-tools/continue:
+          pipeline-number: << pipeline.number >>
+          vcs-type: << pipeline.project.type >>
+          requires: [orb-tools/publish]
+          filters: *filters
